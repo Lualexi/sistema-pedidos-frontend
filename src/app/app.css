@@ -1,0 +1,157 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: #f4f6f9;
+  color: #0f172a;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.erp-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #ea580c;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: grid;
+  place-items: center;
+}
+
+.brand-title { font-weight: 700; font-size: 1rem; line-height: 1.2; }
+.brand-sub { font-size: 0.75rem; color: #64748b; }
+
+.menu-toggle {
+  display: grid;
+  place-items: center;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.erp-nav {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}
+
+.erp-nav--open {
+  display: flex;
+}
+
+.nav-link {
+  text-decoration: none;
+  color: #334155;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-link:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.nav-link.active {
+  background: #fff7ed;
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.nav-link--login {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.nav-link--login:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.nav-link--login.active {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.status-bar {
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.45rem 1.25rem;
+  font-size: 0.82rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #16a34a;
+  flex-shrink: 0;
+}
+
+.status-dot--error { background: #dc2626; }
+.status-error { color: #b91c1c; font-weight: 600; }
+
+.erp-main {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 1.25rem;
+}
+
+@media (min-width: 820px) {
+  .brand-row { width: auto; }
+  .menu-toggle { display: none; }
+  .erp-nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    padding-top: 0;
+    gap: 0.25rem;
+  }
+}
+.nav-link--session {
+  background: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+  font-weight: 600;
+}
