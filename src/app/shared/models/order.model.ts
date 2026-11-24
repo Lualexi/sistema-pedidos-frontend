@@ -3,14 +3,17 @@ export interface OrderItem {
   productId: number;
   productName?: string;
   quantity: number;
-  subtotal?: number;
+  price?: number;
 }
 
 export interface Order {
   id?: number;
   customerName?: string;
-  status?: string;
+  date?: string;
   total?: number;
+  status?: string;
+  orderType?: 'ORDEN' | 'COTIZ' | string;
+  destination?: string;
+  shippingCost?: number;
   items: OrderItem[];
-  createdAt?: string;
 }

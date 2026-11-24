@@ -1,46 +1,133 @@
 <div class="erp-shell">
-  <header class="erp-topbar">
-    <div class="brand-row">
-      <a routerLink="/" class="brand" (click)="closeMenu()">
-        <span class="brand-logo">C&amp;M</span>
+  <aside class="erp-sidebar" [class.erp-sidebar--open]="menuOpen()">
+    <a routerLink="/" class="side-brand" title="Distribuciones C&amp;M — Inicio" (click)="closeMenu()">
+      <span class="brand-logo">C&amp;M</span>
+    </a>
+
+    <nav class="side-nav" aria-label="Módulos del sistema">
+      @if (permissionService.canView('INICIO')) {
+        <a
+          routerLink="/"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="side-item"
+          title="Inicio / Panel Operativo"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">🏠</span>
+          <span class="side-label">Inicio</span>
+        </a>
+      }
+
+      @if (permissionService.canView('PEDIDOS')) {
+        <a
+          routerLink="/pedidos"
+          routerLinkActive="active"
+          class="side-item"
+          title="Pedidos (OMS)"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">📦</span>
+          <span class="side-label">Pedidos</span>
+        </a>
+      }
+
+      @if (permissionService.canView('INVENTARIO')) {
+        <a
+          routerLink="/inventario"
+          routerLinkActive="active"
+          class="side-item"
+          title="Inventario y Catálogo"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">📋</span>
+          <span class="side-label">Inventario</span>
+        </a>
+      }
+
+      @if (permissionService.canView('ALMACENES')) {
+        <a
+          routerLink="/almacenes"
+          routerLinkActive="active"
+          class="side-item"
+          title="Almacenes y Flota"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">🚚</span>
+          <span class="side-label">Almacenes</span>
+        </a>
+      }
+
+      @if (permissionService.canView('COMPRAS')) {
+        <a
+          routerLink="/compras"
+          routerLinkActive="active"
+          class="side-item"
+          title="Compras y Proveedores"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">🛒</span>
+          <span class="side-label">Compras</span>
+        </a>
+      }
+
+      @if (permissionService.canView('CONFIGURACION')) {
+        <a
+          routerLink="/configuracion"
+          routerLinkActive="active"
+          class="side-item"
+          title="Configuración y Permisos"
+          (click)="closeMenu()"
+        >
+          <span class="side-icon" aria-hidden="true">⚙️</span>
+          <span class="side-label">Ajustes</span>
+        </a>
+      }
+    </nav>
+
+    <div class="side-footer">
+      <a
+        routerLink="/login"
+        routerLinkActive="active"
+        class="side-item side-item--session"
+        [title]="authService.isLoggedIn() ? ('Rol: ' + (authService.currentRole() || 'Sesión')) : 'Iniciar sesión'"
+        (click)="closeMenu()"
+      >
+        <span class="side-icon" aria-hidden="true">👤</span>
+        <span class="side-label">
+          @if (authService.isLoggedIn()) {
+            {{ authService.currentRole() || 'Sesión' }}
+          } @else {
+            Login
+          }
+        </span>
+      </a>
+    </div>
+  </aside>
+
+  <div class="erp-workspace">
+    <header class="erp-topbar">
+      <div class="brand-row">
+        <button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Abrir menú">
+          ☰
+        </button>
         <div>
           <div class="brand-title">Distribuciones C&amp;M</div>
           <div class="brand-sub">Control y Mercancía · ERP</div>
         </div>
-      </a>
+      </div>
 
-      <button type="button" class="menu-toggle" (click)="toggleMenu()" aria-label="Abrir menú">
-        ☰
-      </button>
-    </div>
+      <div class="status-bar">
+        <span class="status-dot" [class.status-dot--error]="!!errorMessage()"></span>
+        <span><strong>API REST:</strong> {{ statusMessage() }}</span>
+        @if (errorMessage()) {
+          <span class="status-error">{{ errorMessage() }}</span>
+        }
+      </div>
+    </header>
 
-    <nav class="erp-nav" [class.erp-nav--open]="menuOpen()">
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link" (click)="closeMenu()">Inicio</a>
-      <a routerLink="/pedidos" routerLinkActive="active" class="nav-link" (click)="closeMenu()">Pedidos</a>
-      <a routerLink="/inventario" routerLinkActive="active" class="nav-link" (click)="closeMenu()">Inventario</a>
-      <a routerLink="/almacenes" routerLinkActive="active" class="nav-link" (click)="closeMenu()">Almacenes</a>
-      <a routerLink="/compras" routerLinkActive="active" class="nav-link" (click)="closeMenu()">Compras</a>
-      @if (authService.isLoggedIn()) {
-        <a routerLink="/login" routerLinkActive="active" class="nav-link nav-link--session" (click)="closeMenu()">
-          {{ authService.currentRole() || 'Sesión' }}
-        </a>
-      } @else {
-        <a routerLink="/login" routerLinkActive="active" class="nav-link nav-link--login" (click)="closeMenu()">
-          Login
-        </a>
-      }
-    </nav>
-  </header>
-
-  <div class="status-bar">
-    <span class="status-dot" [class.status-dot--error]="!!errorMessage()"></span>
-    <span><strong>API REST:</strong> {{ statusMessage() }}</span>
-    @if (errorMessage()) {
-      <span class="status-error">{{ errorMessage() }}</span>
-    }
+    <main class="erp-main">
+      <router-outlet />
+    </main>
   </div>
-
-  <main class="erp-main">
-    <router-outlet />
-  </main>
 </div>

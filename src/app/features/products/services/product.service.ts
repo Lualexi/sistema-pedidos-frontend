@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Product } from '../../../shared/models/product.model';
+import { InventoryMovement, Product } from '../../../shared/models/product.model';
 
 @Injectable({
   providedIn: 'root'
@@ -14,6 +14,11 @@ export class ProductService {
     const trimmed = search?.trim();
     const params = trimmed ? new HttpParams().set('search', trimmed) : undefined;
     return this.http.get<Product[]>(this.baseUrl, { params });
+  }
+
+  getMovements(productId?: number): Observable<InventoryMovement[]> {
+    const params = productId != null ? new HttpParams().set('productId', productId) : undefined;
+    return this.http.get<InventoryMovement[]>(`${this.baseUrl}/movements`, { params });
   }
 
   create(product: Product): Observable<Product> {

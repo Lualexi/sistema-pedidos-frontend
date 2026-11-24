@@ -1,7 +1,9 @@
 import { Component, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Order } from '../../../shared/models/order.model';
 import { Product } from '../../../shared/models/product.model';
+import { RouteTariff, Vehicle } from '../../../shared/models/logistics.model';
 import { OrderService } from '../services/order.service';
 import { ProductService } from '../../products/services/product.service';
 import { OrderFormComponent } from './order-form.component';
@@ -13,8 +15,8 @@ import { OrderListComponent } from './order-list.component';
   template: `
     <section class="ord-header">
       <div>
-        <h2>Gestión de Pedidos (OMS)</h2>
-        <p class="subtitle">Registro de órdenes, impacto automático en stock y seguimiento de estados.</p>
+        <h2>Gestión de Pedidos y Cotizaciones (OMS)</h2>
+        <p class="subtitle">Registro de órdenes o cotizaciones (COTIZ), cálculo de ruta/vehículos y seguimiento.</p>
       </div>
       <button type="button" class="btn-secondary" (click)="refreshAll()" [disabled]="loading()">
         {{ loading() ? 'Actualizando...' : 'Actualizar' }}
@@ -23,12 +25,16 @@ import { OrderListComponent } from './order-list.component';
 
     <section class="kpi-row">
       <article class="kpi-box">
-        <span class="kpi-label">Total de pedidos</span>
+        <span class="kpi-label">Total registros</span>
         <strong class="kpi-num">{{ orders().length }}</strong>
       </article>
       <article class="kpi-box">
         <span class="kpi-label">Pendientes / en proceso</span>
         <strong class="kpi-num">{{ activeOrdersCount() }}</strong>
+      </article>
+      <article class="kpi-box">
+        <span class="kpi-label">Cotizaciones (COTIZ)</span>
+        <strong class="kpi-num">{{ quotesCount() }}</strong>
       </article>
       <article class="kpi-box">
         <span class="kpi-label">Monto acumulado</span>
@@ -47,6 +53,8 @@ import { OrderListComponent } from './order-list.component';
     <section class="ord-layout">
       <app-order-form
         [products]="products()"
+        [vehicles]="vehicles()"
+        [tariffs]="tariffs()"
         [saving]="saving()"
         (createOrder)="onCreateOrder($event)"
       />
@@ -100,7 +108,7 @@ import { OrderListComponent } from './order-list.component';
       align-items: start;
     }
     @media (min-width: 960px) {
-      .ord-layout { grid-template-columns: 390px minmax(0, 1fr); }
+      .ord-layout { grid-template-columns: 410px minmax(0, 1fr); }
     }
 
     .alert { padding: 0.75rem 1rem; border-radius: 10px; margin-bottom: 1rem; font-size: 0.88rem; font-weight: 500; }
@@ -111,17 +119,27 @@ import { OrderListComponent } from './order-list.component';
 export class OrdersPage implements OnInit {
   private readonly orderService = inject(OrderService);
   private readonly productService = inject(ProductService);
+  private readonly http = inject(HttpClient);
   private readonly formComp = viewChild(OrderFormComponent);
 
   orders = signal<Order[]>([]);
   products = signal<Product[]>([]);
+  vehicles = signal<Vehicle[]>([]);
+  tariffs = signal<RouteTariff[]>([]);
   loading = signal(false);
   saving = signal(false);
   errorMsg = signal<string | null>(null);
   successMsg = signal<string | null>(null);
 
   activeOrdersCount = computed(() =>
-    this.orders().filter((o) => (o.status ?? 'PENDIENTE') !== 'CANCELADO' && o.status !== 'ENTREGADO').length
+    this.orders().filter((o) => {
+      const st = (o.status ?? 'PENDIENTE').toUpperCase();
+      return st !== 'CANCELADO' && st !== 'ENTREGADO' && st !== 'COTIZACION';
+    }).length
+  );
+
+  quotesCount = computed(() =>
+    this.orders().filter((o) => (o.orderType || '').toUpperCase() === 'COTIZ').length
   );
 
   totalAmount = computed(() =>
@@ -138,6 +156,16 @@ export class OrdersPage implements OnInit {
 
     this.productService.getAll().subscribe({
       next: (prods) => this.products.set(prods ?? []),
+      error: () => {}
+    });
+
+    this.http.get<Vehicle[]>('http://localhost:8080/api/warehouses/vehicles').subscribe({
+      next: (v) => this.vehicles.set(v ?? []),
+      error: () => {}
+    });
+
+    this.http.get<RouteTariff[]>('http://localhost:8080/api/warehouses/tariffs').subscribe({
+      next: (t) => this.tariffs.set(t ?? []),
       error: () => {}
     });
 
@@ -170,14 +198,18 @@ export class OrdersPage implements OnInit {
     this.orderService.create(payload).subscribe({
       next: () => {
         this.saving.set(false);
-        this.successMsg.set('Pedido registrado y stock actualizado en almacén.');
+        this.successMsg.set(
+          payload.orderType === 'COTIZ'
+            ? 'Cotización (COTIZ) registrada sin descontar stock.'
+            : 'Pedido registrado y stock actualizado en almacén.'
+        );
         this.formComp()?.resetAfterSuccess();
         this.refreshAll();
       },
       error: (err: { status?: number }) => {
         this.saving.set(false);
         if (err.status === 400) {
-          this.errorMsg.set('Verifica los datos del pedido o si hay stock suficiente.');
+          this.errorMsg.set('Verifica los datos del pedido o si hay stock suficiente (o usa COTIZ).');
         } else if (err.status === 401 || err.status === 403) {
           this.errorMsg.set('No tienes permisos para registrar pedidos.');
         } else {

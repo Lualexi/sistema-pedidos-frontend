@@ -1,0 +1,136 @@
+<section class="cfg-header">
+  <div>
+    <h2>Configuración del Sistema</h2>
+    <p class="subtitle">Control de usuarios, matriz de permisos por módulo y parámetros operativos.</p>
+  </div>
+
+  <nav class="subnav">
+    <button type="button" [class.active]="section() === 'USERS'" (click)="selectSection('USERS')">Usuarios y Permisos</button>
+    <button type="button" [class.active]="section() === 'PEDIDOS'" (click)="selectSection('PEDIDOS')">Pedidos</button>
+    <button type="button" [class.active]="section() === 'INVENTARIO'" (click)="selectSection('INVENTARIO')">Inventario</button>
+    <button type="button" [class.active]="section() === 'ALMACENES'" (click)="selectSection('ALMACENES')">Almacenes</button>
+    <button type="button" [class.active]="section() === 'COMPRAS'" (click)="selectSection('COMPRAS')">Compras</button>
+  </nav>
+</section>
+
+@if (errorMsg()) {
+  <div class="alert alert--error">{{ errorMsg() }}</div>
+}
+@if (successMsg()) {
+  <div class="alert alert--success">{{ successMsg() }}</div>
+}
+
+@if (section() === 'USERS') {
+  <section class="grid-2">
+    <article class="panel">
+      <div class="panel-head">
+        <h3>Usuarios registrados</h3>
+        <button type="button" class="btn-secondary" (click)="toggleInactiveFilter()">
+          {{ inactiveOnly() ? 'Mostrar todos' : 'Filtrar inactivos (> 1 mes)' }}
+        </button>
+      </div>
+
+      <div class="user-list">
+        @for (u of users(); track u.id) {
+          <div class="user-card" [class.selected]="selectedUser()?.id === u.id" (click)="selectUserForPermissions(u)">
+            <div>
+              <strong>{{ u.fullName || u.username }}</strong>
+              <div class="meta">&#64;{{ u.username }} · {{ u.email || 'Sin correo' }}</div>
+            </div>
+            <span class="role-badge">{{ u.role }}</span>
+          </div>
+        } @empty {
+          <p class="empty">No hay usuarios que coincidan con el filtro.</p>
+        }
+      </div>
+    </article>
+
+    <article class="panel">
+      @if (selectedUser(); as user) {
+        <h3>Permisos por módulo — {{ user.username }}</h3>
+        <p class="meta" style="margin-bottom: 0.85rem;">Define qué módulos ve y qué acciones ejecuta este usuario.</p>
+
+        <table class="perm-table">
+          <thead>
+            <tr>
+              <th>Módulo</th>
+              <th>Ver</th>
+              <th>Crear</th>
+              <th>Editar</th>
+              <th>Eliminar</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of userPermissions(); track p.moduleKey) {
+              <tr>
+                <td><strong>{{ p.moduleKey }}</strong></td>
+                <td><input type="checkbox" [(ngModel)]="p.canView" /></td>
+                <td><input type="checkbox" [(ngModel)]="p.canCreate" /></td>
+                <td><input type="checkbox" [(ngModel)]="p.canEdit" /></td>
+                <td><input type="checkbox" [(ngModel)]="p.canDelete" /></td>
+                <td>
+                  <button type="button" class="btn-mini" (click)="savePermissionRow(p)">Guardar</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <div class="security-box">
+          <strong>Seguridad adicional (Interfaz 2FA):</strong>
+          <label class="check-line">
+            <input type="checkbox" [(ngModel)]="twoFactorSimulated" />
+            <span>Habilitar verificación Authenticator (2FA) en el próximo inicio de sesión (simulación UI).</span>
+          </label>
+        </div>
+      } @else {
+        <h3>Detalle de permisos</h3>
+        <p class="empty">Selecciona un usuario de la lista izquierda para configurar sus permisos por módulo.</p>
+      }
+    </article>
+  </section>
+} @else {
+  <section class="grid-2">
+    <article class="panel">
+      <h3>Agregar ítem en {{ section() }}</h3>
+      <form (ngSubmit)="addSetting()" class="form-stack">
+        <div class="field">
+          <label>Lista / Clave</label>
+          <input type="text" name="skey" required [(ngModel)]="newSettingKey" placeholder="Ej. MONEDA, CATEGORIA, REGLA" />
+        </div>
+        <div class="field">
+          <label>Valor *</label>
+          <input type="text" name="sval" required [(ngModel)]="newSettingValue" placeholder="Ej. PEN, USD, EUR..." />
+        </div>
+        <div class="field">
+          <label>Descripción</label>
+          <input type="text" name="sdesc" [(ngModel)]="newSettingDesc" placeholder="Detalle opcional" />
+        </div>
+        <button type="submit" class="btn-primary">Agregar a lista</button>
+      </form>
+    </article>
+
+    <article class="panel">
+      <h3>Parámetros configurados ({{ section() }})</h3>
+      <div class="user-list">
+        @for (item of filteredSettings(); track item.id ?? item.settingValue) {
+          <div class="user-card">
+            <div>
+              <span class="role-badge">{{ item.settingKey }}</span>
+              <strong style="margin-left: 0.45rem;">{{ item.settingValue }}</strong>
+              @if (item.description) {
+                <div class="meta">{{ item.description }}</div>
+              }
+            </div>
+            @if (item.id != null) {
+              <button type="button" class="btn-danger" (click)="deleteSetting(item.id)">Quitar</button>
+            }
+          </div>
+        } @empty {
+          <p class="empty">No hay parámetros registrados aún en {{ section() }}.</p>
+        }
+      </div>
+    </article>
+  </section>
+}
